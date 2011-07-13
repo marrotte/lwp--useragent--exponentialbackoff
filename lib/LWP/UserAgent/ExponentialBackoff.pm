@@ -52,7 +52,7 @@ sub simple_request {
 	{
 		$self->{retries}[$currentRetryCount]=$retryInterval;
 		$currentRetryCount++;
-		#sleep $retryInterval;
+		sleep $retryInterval;
 		$response = $self->SUPER::simple_request(@_);
 		$code     = $response->code();
 	}
