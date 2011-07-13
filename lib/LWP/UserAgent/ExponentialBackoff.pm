@@ -122,7 +122,7 @@ sub delFailCodes {
 sub sum {
 	my ( $self, $sum ) = @_;
 	$self->{retryCount} = log2( $sum / $self->{deltaBackoff} - 1 );
-	# maxBackoff should be at least as big as the largest retry interval which is never bigger than the sum
+	# maxBackoff should be at least as big as the largest retry interval which is never bigger than the sum, so just make it equal the sum
 	$self->{maxBackoff} = $sum;
 }
 
