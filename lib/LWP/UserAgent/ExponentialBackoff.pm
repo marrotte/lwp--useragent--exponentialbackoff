@@ -1,7 +1,7 @@
 use LWP::UserAgent;
 
 package LWP::UserAgent::ExponentialBackoff;
-$VERSION = '1.00';
+$VERSION = '0.01';
 @ISA     = ("LWP::UserAgent");
 my @FAILCODES = qw(408 500 502 503 504);
 
@@ -136,4 +136,84 @@ sub log2 {
 	my $n = shift;
 	return log($n) / log(2);
 }
+1;
+__END__
 
+=head1 NAME
+
+LWP::UserAgent::ExponentialBackoff - LWP::UserAgent extension that retries errors with exponential backoff
+
+=head1 SYNOPSIS
+
+  my @failCodes    = qw(500 503);
+  my %failCodesMap = map { $_ => $_ } @failCodes;
+
+  %options = (
+  	  tolerance    => .20,
+	  retryCount   => 5,
+	  minBackoff   => 3,
+	  maxBackoff   => 120,
+	  deltaBackoff => 3,
+	  failCodes    => \%failCodesMap
+  );
+
+  my $ua = LWP::UserAgent::ExponentialBackoff->new(%options);
+  my $request   = HTTP::Request->new( 'GET', $uri );
+  my $response  = $ua->request($request);
+
+=head1 DESCRIPTION
+
+LWP::UserAgent::ExponentialBackoff is a LWP::UserAgent extention.
+It retries requests on error using an exponential backoff algorthim. 
+
+=head1 CONSTRUCTOR METHODS
+
+The following constructor methods are available:
+
+=over 4
+
+=item $ua = LWP::UserAgent::ExponentialBackoff->new( %options )
+
+This method constructs a new C<LWP::UserAgent::ExponentialBackoff> object and returns it.
+Key/value pair arguments may be provided to set up the initial state.
+
+   KEY                     DEFAULT
+   -----------             --------------------
+   sum                     undef
+   retryCount              3
+   minBackoff              3
+   maxBackoff              90
+   tolerance               .20
+   deltaBackoff            3
+   failCodes               { map { $_ => $_ } qw(408 500 502 503 504) }	
+   
+
+See L<LWP::UserAgent> for additional key/value pair arguments that may be provided.
+
+=head1 METHODS
+
+This module inherits all of L<LWP::UserAgent>'s methods,
+and adds the following.
+
+=over
+
+TBD
+
+=head1 IMPLEMENTATION
+
+This class works by overriding LWP::UserAgent's Csimple_request method 
+with an exponential backoff algortihm.
+
+
+=head1 SEE ALSO
+
+L<LWP>, L<LWP::UserAgent>, L<LWP::UserAgent::Determined>
+
+=head1 AUTHOR
+
+Michael Marrotte <lt>marrotte at cpan dot org<gt>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

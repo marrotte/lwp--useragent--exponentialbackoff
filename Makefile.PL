@@ -5,4 +5,5 @@ WriteMakefile(
     PREREQ_PM         => {
         LWP::UserAgent => 0,
     }, 
+    'dist'         => { COMPRESS => 'gzip -6f', SUFFIX => 'gz', },
 );
