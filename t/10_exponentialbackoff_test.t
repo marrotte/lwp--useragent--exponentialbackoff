@@ -2,7 +2,7 @@
 # Time-stamp: "0";
 use strict;
 use Test;
-BEGIN { plan tests => 13 }
+BEGIN { plan tests => 14 }
 
 #use LWP::Debug ('+');
 
