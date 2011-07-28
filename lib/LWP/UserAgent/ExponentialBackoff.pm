@@ -40,7 +40,6 @@ sub new {
 
 sub simple_request {
 	my ( $self, @args ) = @_;
-	my $total             = 0;
 	my $failCodes         = $self->{failCodes};
 	my $currentRetryCount = 0;
 	my $before_c          = $self->before_request;
@@ -48,10 +47,10 @@ sub simple_request {
 	my $retryInterval     = 0;
 	
 	do {
+		$before_c and $before_c->( $self, \@args, $response, $retryInterval);
 		sleep $retryInterval;
-		$before_c->( $self, \@args );
 		$response = $self->SUPER::simple_request(@args);
-		$after_c and $after_c->( $self, \@args, $response );
+		$after_c and $after_c->( $self, \@args, $response, $retryInterval);
 		$code = $response->code();
 		$currentRetryCount++;
 	}while ( ( $retryInterval = $self->retry($currentRetryCount-1) )
@@ -125,7 +124,7 @@ sub delFailCodes {
 # Given sum and deltaBackoff, compute retryCount and maxBackoff such that total retryIntervals will always be equal to or "slightly" greater than sum.
 sub sum {
 	my ( $self, $sum ) = @_;
-	$self->{retryCount} = log2( $sum / $self->{deltaBackoff} - 1 );
+	$self->{retryCount} = log2( $sum / $self->{deltaBackoff} + 1 );
 
 # maxBackoff should be at least as big as the largest retry interval which is never bigger than the sum, so just make it equal the sum
 	$self->{maxBackoff} = $sum;
