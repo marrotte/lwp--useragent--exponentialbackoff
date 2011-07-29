@@ -1,12 +1,14 @@
 use LWP::UserAgent;
 
 package LWP::UserAgent::ExponentialBackoff;
-$VERSION = '0.03';
+$VERSION = '0.04';
 @ISA     = ("LWP::UserAgent");
 my @FAILCODES = qw(408 500 502 503 504);
 
 sub new {
 	my ( $class, %cnf ) = @_;
+	my $before_request = delete $cnf{before_request};
+	my $after_request = delete $cnf{after_request};
 	my $sum        = delete $cnf{sum};
 	my $retryCount = delete $cnf{retryCount};
 	$retryCount = 3 unless defined $retryCount;
@@ -35,6 +37,8 @@ sub new {
 	}, $class;
 	$self->deltas($tolerance);
 	$self->sum($sum) unless !defined $sum;
+	$self->before_request($before_request) unless !defined $before_request;
+	$self->after_request($after_request) unless !defined $after_request;
 	return $self;
 }
 
@@ -47,10 +51,10 @@ sub simple_request {
 	my $retryInterval     = 0;
 	
 	do {
-		$before_c and $before_c->( $self, \@args, $response, $retryInterval);
+		$before_c and $before_c->( $self, \@args, $retryInterval);
 		sleep $retryInterval;
 		$response = $self->SUPER::simple_request(@args);
-		$after_c and $after_c->( $self, \@args, $response, $retryInterval);
+		$after_c and $after_c->( $self, \@args, $retryInterval, $response);
 		$code = $response->code();
 		$currentRetryCount++;
 	}while ( ( $retryInterval = $self->retry($currentRetryCount-1) )
@@ -144,16 +148,24 @@ LWP::UserAgent::ExponentialBackoff - LWP::UserAgent extension that retries error
 
 =head1 SYNOPSIS
 
+  my $before_request = sub {
+    print "# /Trying ", $_[1][0]->uri, " in ", $_[3], " seconds\n";
+    ++$before_count;
+    $sum+=$_[3];
+  };
+
   my @failCodes    = qw(500 503);
   my %failCodesMap = map { $_ => $_ } @failCodes;
 
   %options = (
-  	  tolerance    => .20,
-	  retryCount   => 5,
-	  minBackoff   => 3,
-	  maxBackoff   => 120,
-	  deltaBackoff => 3,
-	  failCodes    => \%failCodesMap
+  	  before_request => $before_request,
+  	  after_request  => $after_request,
+  	  tolerance      => .20,
+	  retryCount     => 5,
+	  minBackoff     => 3,
+	  maxBackoff     => 120,
+	  deltaBackoff   => 3,
+	  failCodes      => \%failCodesMap
   );
 
   my $ua = LWP::UserAgent::ExponentialBackoff->new(%options);
@@ -163,7 +175,7 @@ LWP::UserAgent::ExponentialBackoff - LWP::UserAgent extension that retries error
 =head1 DESCRIPTION
 
 LWP::UserAgent::ExponentialBackoff is a LWP::UserAgent extention.
-It retries requests on error using an exponential backoff algorthim. 
+It retries requests on error using an exponential backoff algorthim.
 
 =head1 CONSTRUCTOR METHODS
 
@@ -196,11 +208,39 @@ and adds the following.
 
 =over
 
-TBD
+=item $browser->before_request()
+
+=item $browser->before_request( \&some_routine );
+
+=item $browser->after_request()
+
+=item $browser->after_request( \&some_routine );
+
+These read (first two) or set (second two) callbacks that are
+called before the actual HTTP/FTP/etc request is made.  By default,
+these are set to undef, meaning nothing special is called.  If you
+want to alter try requests, or inspect responses before any retrying
+is considered, you can set up these callbacks.
+
+The arguments passed to these routines are:
+
+=over
+
+=item 0: the current $browser object
+
+=item 1: an arrayref of the arguments we pass to LWP::UserAgent::simple_request
+(the first of which is the request object)
+
+=item 2: the number of seconds we sleep on this retry.
+
+=item (3): And, only for after_request, the response we
+just got.
+
+=back
 
 =head1 IMPLEMENTATION
 
-This class works by overriding LWP::UserAgent's Csimple_request method 
+This class works by overriding LWP::UserAgent's C<simple_request> method 
 with an exponential backoff algortihm.
 
 
@@ -208,9 +248,19 @@ with an exponential backoff algortihm.
 
 L<LWP>, L<LWP::UserAgent>, L<LWP::UserAgent::Determined>
 
+=head1 COPYRIGHT AND DISCLAIMER
+
+Copyright 2011, Michael Marrotte C<marrotte@gmail.com>, all rights
+reserved.  This program is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
+This program is distributed in the hope that it will be useful,
+but without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
 =head1 AUTHOR
 
-Michael Marrotte <lt>marrotte at cpan dot org<gt>
+Michael Marrotte C<marrotte@gmail.com>
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

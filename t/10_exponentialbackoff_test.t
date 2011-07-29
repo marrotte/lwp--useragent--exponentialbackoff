@@ -7,8 +7,6 @@ BEGIN { plan tests => 15 }
 #use LWP::Debug ('+');
 
 use LWP::UserAgent::ExponentialBackoff;
-my $browser = LWP::UserAgent::ExponentialBackoff->new;
-
 # test 1
 ok 1;
 
@@ -16,6 +14,24 @@ print "# Hello from ", __FILE__, "\n";
 print "# LWP::UserAgent::ExponentialBackoff v$LWP::UserAgent::ExponentialBackoff::VERSION\n";
 print "# LWP::UserAgent v$LWP::UserAgent::VERSION\n";
 print "# LWP v$LWP::VERSION\n" if $LWP::VERSION;
+
+my $before_count = 0;
+my $after_count = 0;
+my $sum = 0;
+my $before_request = sub {
+  print "# /Trying ", $_[1][0]->uri, " in ", $_[2], " seconds\n";
+  ++$before_count;
+  $sum+=$_[2];
+};
+
+my $after_request = sub {
+  print "# \\Just tried ", $_[1][0]->uri, " and got a ", $_[3]->code, "\n";
+  ++$after_count;
+};
+
+my %options = (minBackoff   => 3, before_request => $before_request, after_request => $after_request);
+
+my $browser = LWP::UserAgent::ExponentialBackoff->new(%options);
 
 my @error_codes = qw(408 500 502 503 504);
 # test 2
@@ -27,22 +43,8 @@ print "# Set to retry only the following errors: @error_codes \n";
 # test 4
 ok( $browser->sum(21) );
 
-my $before_count = 0;
-my $after_count = 0;
-my $sum = 0;
-
-$browser->before_request( sub {
-  print "# /Trying ", $_[1][0]->uri, " in ", $_[3], " seconds\n";
-  ++$before_count;
-  $sum+=$_[3];
-});
-$browser->after_request( sub {
-  print "# \\Just tried ", $_[1][0]->uri, " and got a ", $_[2]->code, "\n";
-  ++$after_count;
-});
-
 my $url = 'http://www.livejournal.com/~torgo_x/rss';
-print "# Trying a URL redirect, $url\n";
+print "# Trying a redirects, not really a retry, $url\n";
 my $resp = $browser->get( $url );
 # test 5
 ok 1;
