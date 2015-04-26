@@ -22,7 +22,7 @@ sub new {
 	$tolerance = .20 unless defined $tolerance;
 	my $failCodes = delete $cnf{failCodes};
 	$failCodes = { map { $_ => $_ } @FAILCODES } unless defined $failCodes;
-	my $self = $class->SUPER::new(@_);
+	my $self = $class->SUPER::new(%cnf);
 	$self = bless {
 		%{$self},
 		sum          => $sum,
