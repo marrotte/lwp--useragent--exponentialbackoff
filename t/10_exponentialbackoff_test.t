@@ -1,6 +1,8 @@
 
 # Time-stamp: "0";
 use strict;
+use warnings;
+
 use Test;
 BEGIN { plan tests => 15 }
 
