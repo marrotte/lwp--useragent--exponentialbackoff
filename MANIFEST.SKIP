@@ -1,0 +1,7 @@
+\.git
+\.sw.$
+pm_to_blib
+MYMETA\..*
+blib
+Makefile
+\.tar\.gz
