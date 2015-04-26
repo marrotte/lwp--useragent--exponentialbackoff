@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test;
-BEGIN { plan tests => 15 }
+BEGIN { plan tests => 16 }
 
 #use LWP::Debug ('+');
 
@@ -32,6 +32,13 @@ my $after_request = sub {
 };
 
 my %options = (minBackoff   => 3, before_request => $before_request, after_request => $after_request);
+
+my $agent_string =
+    LWP::UserAgent->new->agent
+    . "/ExponentialBackoff/"
+    . $LWP::UserAgent::ExponentialBackoff::VERSION;
+
+$options{agent} = $agent_string;
 
 my $browser = LWP::UserAgent::ExponentialBackoff->new(%options);
 
@@ -117,8 +124,14 @@ print "# After_count: $after_count\n";
 ok $after_count,  1;
 
 
+# test 15
+print "# Make sure Inheritance works\n";
+ok $browser->agent, $agent_string;
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 print "# Okay, bye from ", __FILE__, "\n";
-# test 15
+# test 16
 ok 1;
 
