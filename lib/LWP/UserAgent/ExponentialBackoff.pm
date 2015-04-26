@@ -1,7 +1,7 @@
 use LWP::UserAgent;
 
 package LWP::UserAgent::ExponentialBackoff;
-$VERSION = '0.04';
+$VERSION = '0.05';
 @ISA     = ("LWP::UserAgent");
 my @FAILCODES = qw(408 500 502 503 504);
 
