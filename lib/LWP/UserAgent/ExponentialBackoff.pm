@@ -1,7 +1,7 @@
 use LWP::UserAgent;
 
 package LWP::UserAgent::ExponentialBackoff;
-$VERSION = '0.04';
+$VERSION = '0.05';
 @ISA     = ("LWP::UserAgent");
 my @FAILCODES = qw(408 500 502 503 504);
 
@@ -22,7 +22,7 @@ sub new {
 	$tolerance = .20 unless defined $tolerance;
 	my $failCodes = delete $cnf{failCodes};
 	$failCodes = { map { $_ => $_ } @FAILCODES } unless defined $failCodes;
-	my $self = $class->SUPER::new(@_);
+	my $self = $class->SUPER::new(%cnf);
 	$self = bless {
 		%{$self},
 		sum          => $sum,

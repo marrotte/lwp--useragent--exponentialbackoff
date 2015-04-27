@@ -6,3 +6,4 @@ MANIFEST.SKIP
 README
 t/00_compile.t
 t/10_exponentialbackoff_test.t
+t/20_no_warnings.t
